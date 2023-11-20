@@ -6,7 +6,6 @@ import static tdtu.android.musicappdemov2.ApplicationClass.ACTION_PREVIOUS;
 import static tdtu.android.musicappdemov2.ApplicationClass.CHANNEL_ID_2;
 import static tdtu.android.musicappdemov2.MainActivity.randomBoolean;
 import static tdtu.android.musicappdemov2.MainActivity.repeatBoolean;
-import static tdtu.android.musicappdemov2.MainActivity.songsList;
 import static tdtu.android.musicappdemov2.SongsAdapter.songsListAdapter;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +13,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -28,7 +26,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 //import android.support.v4.media.session.MediaSessionCompat;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -37,26 +34,31 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.Random;
+import android.view.MenuItem;
+import android.widget.PopupMenu;
+import android.widget.Toast;
+
 
 public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, ServiceConnection {
-    private ImageButton btnPlay,btnPrevious,btnNext,btnRepeat,btnRandom, btnBackMain;
+    private ImageButton btnPlay,btnMenuPlay, btnPrevious,btnNext, btnRepeat,btnRandom, btnBackMain;
     private TextView songStartTime, songEndTime, nameSong, author;
     private SeekBar progress_music;
     private ImageView songImg;
-
+    private boolean isMuted = false;
+    private MediaPlayer mediaPlayer;
     private int position = -1;
     public static ArrayList<Songs> songsArrayList;
     private static Uri uri;
     private Handler handler = new Handler();
     private Thread playThread, nextThread, previousThread;
     MusicService musicService;
+
 
 
     @Override
@@ -113,6 +115,16 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
             }
         });
 
+        mediaPlayer = new MediaPlayer();
+
+        ImageButton btnMenuPlay = findViewById(R.id.btnMenuPlay);
+        btnMenuPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPopupMenu(view);
+            }
+        });
+
         btnRepeat.setOnClickListener(view -> {
             if(repeatBoolean){
                 repeatBoolean = false;
@@ -130,7 +142,8 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
 
     private void setFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().hide();
     }
 
@@ -289,18 +302,28 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
         startService(intent);
     }
 
-    private  void metaData(Uri uri){
-        nameSong.setText(songsArrayList.get(position).getTitle());
-        author.setText(songsArrayList.get(position).getArtist());
+    private  void metaData(Uri uri) {
+        nameSong.setText( songsArrayList.get( position ).getTitle() );
+        author.setText( songsArrayList.get( position ).getArtist() );
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(uri.toString());
-        int durationTotal = Integer.parseInt(songsArrayList.get(position).getDuration()) / 1000;
-        songEndTime.setText(formattedTime(durationTotal));
-        byte[] img = retriever.getEmbeddedPicture();
-        if(img != null){
-            Glide.with(this).asBitmap().load(img).apply(new RequestOptions().override(450,500)).into(songImg);
-        }else{
-            Glide.with(this).asBitmap().load(R.drawable.default_image).into(songImg);
+        retriever.setDataSource( uri.toString() );
+        int durationTotal = Integer.parseInt( songsArrayList.get( position ).getDuration() ) / 1000;
+        songEndTime.setText( formattedTime( durationTotal ) );
+        byte[] img = new byte[0];
+        try {
+            img = retriever.getEmbeddedPicture();
+            // Process the image if it's not null
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            retriever.release();
+        }
+
+        if (img != null) {
+            Glide.with( this ).asBitmap().load( img ).apply( new RequestOptions().override(
+                    450, 500 ) ).into( songImg );
+        } else {
+            Glide.with( this ).asBitmap().load( R.drawable.default_image ).into( songImg );
         }
     }
 
@@ -343,16 +366,23 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
 
     public void showNotification(int btnPlay){
         Intent intent = new Intent(this,PlayMusicActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this,0,intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent contentIntent = PendingIntent.getActivity(this,0,
+                intent, PendingIntent.FLAG_IMMUTABLE);
 
-        Intent prevIntent = new Intent(this,NotificationReceiver.class).setAction(ACTION_PREVIOUS);
-        PendingIntent prevPending = PendingIntent.getBroadcast(this,0,prevIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent prevIntent = new Intent(this,
+                NotificationReceiver.class).setAction(ACTION_PREVIOUS);
+        PendingIntent prevPending = PendingIntent.getBroadcast(this,0,
+                prevIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent playIntent = new Intent(this,NotificationReceiver.class).setAction(ACTION_PLAY);
-        PendingIntent playPending = PendingIntent.getBroadcast(this,0,playIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent playIntent = new Intent(this,
+                NotificationReceiver.class).setAction(ACTION_PLAY);
+        PendingIntent playPending = PendingIntent.getBroadcast(this,0,
+                playIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent nextIntent = new Intent(this,NotificationReceiver.class).setAction(ACTION_NEXT);
-        PendingIntent nextPending = PendingIntent.getBroadcast(this,0,nextIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent nextIntent = new Intent(this,
+                NotificationReceiver.class).setAction(ACTION_NEXT);
+        PendingIntent nextPending = PendingIntent.getBroadcast(this,0,
+                nextIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
         byte[] img = null;
         img = getSongImage(songsArrayList.get(position).getPath());
@@ -426,5 +456,56 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
 
     private void stopRotateSongImg(){
         songImg.animate().cancel();
+    }
+
+
+
+    private void showPopupMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.inflate(R.menu.menu_play);
+
+        // Set a listener on the menu items
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.action_mute:
+                        mute();
+                        return true;
+                    case R.id.action_unmute:
+                        unmute();
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+
+        popupMenu.show();
+    }
+
+    private void mute() {
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(0, 0); // Mute by setting volume to 0
+            isMuted = true;
+            Toast.makeText(this, "Muted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void unmute() {
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(1, 1); // Unmute by setting volume to 1
+            isMuted = false;
+            Toast.makeText(this, "Unmuted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 }

@@ -63,8 +63,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
 
     private void permission() {
-        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE);
+        if(ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE);
         }else{
 //            Toast.makeText(MainActivity.this,"Permission granted!",Toast.LENGTH_LONG).show();
             songsList = getAllSong(MainActivity.this);
@@ -72,14 +74,16 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == REQUEST_CODE){
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
 //                Toast.makeText(MainActivity.this,"Permission granted!",Toast.LENGTH_LONG).show();
                 songsList = getAllSong(MainActivity.this);
             }else{
-                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE);
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE);
 
             }
         }
