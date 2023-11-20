@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="10dp">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:src="@drawable/ic_arrow_back_40dp"
+            android:id="@+id/btnBackMain"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"></ImageButton>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Now Playing"
+            android:layout_toRightOf="@+id/btnBackMain"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_centerVertical="true"
+            android:gravity="center_horizontal"></TextView>
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:src="@drawable/ic_menu_play_40dp"
+            android:id="@+id/btnMenuPlay"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"></ImageButton>
+    </RelativeLayout>
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
+        android:src="@drawable/default_image"
+        android:id="@+id/imgSongPlay"
+        android:layout_marginHorizontal="10dp"
+        ></de.hdodenhof.circleimageview.CircleImageView>
+    <TextView
+        android:id="@+id/nameSongPlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cưới Thôi"
+        android:textSize="25sp"
+        android:textColor="#fefefe"
+        android:textAlignment="center"
+        android:textStyle="bold"></TextView>
+
+    <TextView
+        android:id="@+id/authorSongPlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Masew"
+        android:textSize="20sp"
+        android:textColor="#746f7b"
+        android:textAlignment="center"></TextView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/songStartTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textColor="@color/white"
+            android:layout_below="@+id/progress_music"
+            android:layout_alignParentStart="true"
+            android:layout_marginHorizontal="10dp"></TextView>
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:progressBackgroundTint="@color/white"
+            android:progressTint="@color/purple_500"
+            android:id="@+id/progress_music"
+            android:layout_marginHorizontal="10dp"></SeekBar>
+        <TextView
+            android:id="@+id/songEndTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textColor="@color/white"
+            android:layout_below="@+id/progress_music"
+            android:layout_alignParentEnd="true"
+            android:layout_marginHorizontal="10dp"></TextView>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="10dp">
+
+        <ImageButton
+            android:id="@+id/btnRepeatPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            app:srcCompat="@drawable/ic_repeat_40dp"
+            android:layout_marginEnd="30dp"/>
+
+        <ImageButton
+            android:id="@+id/btnPreviousPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            app:srcCompat="@drawable/ic_previous_80dp"
+            />
+
+        <ImageButton
+            android:id="@+id/btnPlayPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            app:srcCompat="@drawable/ic_play_80dp" />
+
+        <ImageButton
+            android:id="@+id/btnNextPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            app:srcCompat="@drawable/ic_next_80dp" />
+
+        <ImageButton
+            android:id="@+id/btnRandomPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_swap_off_40dp"
+            android:background="@color/background"
+            android:layout_marginStart="30dp" />
+
+    </LinearLayout>
+</LinearLayout>
