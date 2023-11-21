@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/action_mute"
-        android:title="Mute" />
-    <item
-        android:id="@+id/action_unmute"
-        android:title="Unmute" />
+        android:id="@+id/action_speed_normal"
+        android:title="Force quit" />
+
 </menu>

@@ -1,5 +1,6 @@
 package tdtu.android.musicappdemov2;
 
+import static android.app.Service.START_NOT_STICKY;
 import static tdtu.android.musicappdemov2.ApplicationClass.ACTION_NEXT;
 import static tdtu.android.musicappdemov2.ApplicationClass.ACTION_PLAY;
 import static tdtu.android.musicappdemov2.ApplicationClass.ACTION_PREVIOUS;
@@ -19,13 +20,16 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioAttributes;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 //import android.support.v4.media.session.MediaSessionCompat;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -38,6 +42,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import android.view.MenuItem;
@@ -50,7 +55,8 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
     private TextView songStartTime, songEndTime, nameSong, author;
     private SeekBar progress_music;
     private ImageView songImg;
-    private boolean isMuted = false;
+    private float playSpeed = 1.0f;
+
     private MediaPlayer mediaPlayer;
     private int position = -1;
     public static ArrayList<Songs> songsArrayList;
@@ -70,6 +76,7 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
 
         initView();
         getIntentMethod();
+
 
         progress_music.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -139,13 +146,60 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
             finish();
         });
     }
+    private void initializeMediaPlayer() {
+        mediaPlayer = new MediaPlayer();
 
+        try {
+            // Set the data source to your audio file path or URL
+            mediaPlayer.setDataSource("your_audio_file_path_or_url");
+
+            // Set any other configuration options if needed
+            mediaPlayer.setAudioAttributes(
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+            );
+
+            // Set a listener for when the media is prepared
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    // Media is prepared, you can start playing here if needed
+                }
+            });
+
+            // Set a listener for when an error occurs
+            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    // Handle errors here
+                    return false;
+                }
+            });
+
+            // Set a listener for when playback is completed
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    // Handle completion here
+                }
+            });
+
+            // Prepare the media asynchronously
+            mediaPlayer.prepareAsync();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle exception
+        }
+    }
     private void setFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().hide();
     }
+
 
     @Override
     protected void onResume() {
@@ -201,6 +255,55 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
             showNotification(R.drawable.ic_pause_80dp);
         }
     }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            int position = intent.getIntExtra("positionForService", -1);
+
+            if (position != -1) {
+                // Retrieve the URI of the selected song based on the position
+                String songUri = PlayMusicActivity.songsArrayList.get(position).getPath();
+
+                // Initialize and start the MediaPlayer
+                initializeMediaPlayer(songUri);
+            }
+        }
+
+        // Return the appropriate value based on your service requirements
+        return START_NOT_STICKY;
+    }
+
+    private void initializeMediaPlayer(String songUri) {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioAttributes(
+                new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+        );
+
+        try {
+            // Set the data source to the URI of the selected song
+            mediaPlayer.setDataSource(songUri);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+
+            // Add any other necessary logic, such as updating UI, handling playback controls, etc.
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Add a completion listener if you want to handle the end of playback
+        mediaPlayer.setOnCompletionListener(mp -> {
+            // Handle completion logic if needed
+        });
+}
+
 
     private int getRandom(int i) {
         Random random = new Random();
@@ -414,9 +517,9 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         if (notificationManager != null){
             notificationManager.notify(0,notification);
-//            Log.e("notify success   ", "true");
+            Log.e("notify success   ", "true");
         }else{
-//            Log.e("notify fail", "true");
+            Log.e("notify fail", "true");
         }
     }
 
@@ -469,12 +572,10 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
-                    case R.id.action_mute:
-                        mute();
+                    case R.id.action_speed_normal:
+                        setPlaySpeed(1.0f);
                         return true;
-                    case R.id.action_unmute:
-                        unmute();
-                        return true;
+
                     default:
                         return false;
                 }
@@ -484,21 +585,21 @@ public class PlayMusicActivity extends AppCompatActivity implements ActionPlay, 
         popupMenu.show();
     }
 
-    private void mute() {
-        if (mediaPlayer != null) {
-            mediaPlayer.setVolume(0, 0); // Mute by setting volume to 0
-            isMuted = true;
-            Toast.makeText(this, "Muted", Toast.LENGTH_SHORT).show();
+
+    private void setPlaySpeed(float speed) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // For Android API 23 and above, setPlaybackParams is available
+            mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(speed));
+        } else {
+            // For earlier versions, release and recreate MediaPlayer with the desired speed
+            mediaPlayer.release();
+            initializeMediaPlayer();
+            mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(speed));
         }
+        playSpeed = speed;
+        Toast.makeText(this, "Playback speed: " + playSpeed, Toast.LENGTH_SHORT).show();
     }
 
-    private void unmute() {
-        if (mediaPlayer != null) {
-            mediaPlayer.setVolume(1, 1); // Unmute by setting volume to 1
-            isMuted = false;
-            Toast.makeText(this, "Unmuted", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     @Override
     protected void onDestroy() {
