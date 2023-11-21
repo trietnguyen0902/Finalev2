@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
 
     private void permission() {
+        //permission
         if(ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this,
